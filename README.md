@@ -31,19 +31,25 @@ data_db_username: <your_data_db_user_name>
 data_db_database: <your_data_dbs_name>
 data_db_password: <your_data_db_password>
 data_db_port: <your_data_db_port_num>
-metadata_db_user: <your_metadata_db_username>
+metadata_db_host: <your_metadata_db_host>
+metadata_db_username: <your_metadata_db_username>
 metadata_db_password: <your_metadata_db_password>
 metadata_db_port: <your_metadata_db_port_num>
 ```
 
-To create an engine
+To create an engine (for working with the data_db) and client (for working with the metadata_db)
 
 ```python
 import os
-from wareflow.utils.db import get_data_db_engine_from_credential_file
+from wareflow.utils.db import (
+    get_data_db_engine_from_credential_file,
+    get_metadata_db_connection_from_credential_file
+)
 
 engine = get_data_db_engine_from_credential_file(
     credential_path=os.path.join("path", "to", "credentials.yml")
 )
-
+client = get_metadata_db_connection_from_credential_file(
+    credential_path=os.path.join("path", "to", "credentials.yml")
+)
 ```
