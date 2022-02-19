@@ -1,10 +1,10 @@
 import os
-from typing import Dict
+from typing import Dict, List
 from urllib.parse import quote_plus
 import yaml
 
 from pymongo import MongoClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine.url import URL
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.schema import CreateSchema
@@ -63,6 +63,11 @@ def create_database_schema(engine: Engine, schema_name: str) -> None:
         print(f"Database schema '{schema_name}' already exists.")
 
 
-def get_data_db_schema_names(engine: Engine) -> List:
+def get_data_schema_names(engine: Engine) -> List:
     insp = inspect(engine)
     return insp.get_schema_names()
+
+
+def get_data_table_names_in_schema(engine: Engine, schema_name: str) -> List:
+    insp = inspect(engine)
+    return insp.get_table_names(schema=schema_name)
