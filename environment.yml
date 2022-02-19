@@ -1,0 +1,17 @@
+name: dwh_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - geopandas
+  - pyarrow
+  - jupyterlab
+  - descartes
+  - contextily
+  - psycopg2
+  - sqlalchemy
+  - seaborn
+  - pymongo
+  - pyyaml
+prefix: /home/matt/miniconda3/envs/dwh_env
