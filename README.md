@@ -53,3 +53,24 @@ client = get_metadata_db_connection_from_credential_file(
     credential_path=os.path.join("path", "to", "credentials.yml")
 )
 ```
+
+To create a data_db schema
+```python
+from wareflow.utils.db import create_database_schema
+
+create_database_schema(engine=engine, schema_name="data_raw")
+```
+
+To inspect the schemas in the data_db
+```python
+from wareflow.utils.db import get_data_schema_names
+
+get_data_schema_names(engine)
+
+['data_raw',
+ 'information_schema',
+ 'public',
+ 'tiger',
+ 'tiger_data',
+ 'topology']
+```
