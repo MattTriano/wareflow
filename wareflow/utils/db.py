@@ -4,8 +4,10 @@ from urllib.parse import quote_plus
 import yaml
 
 from pymongo import MongoClient
-from sqlalchemy.engine.url import URL
 from sqlalchemy import create_engine
+from sqlalchemy.engine.url import URL
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.schema import CreateSchema
 
 
 def get_data_db_connection_url_from_credential_file(credential_path: os.path) -> URL:
@@ -44,3 +46,23 @@ def get_metadata_db_connection_from_credential_file(
         + f"{credentials['metadata_db_port']}/"
     )
     return MongoClient(connection_str)
+
+
+def database_has_schema(engine: Engine, schema_name: str) -> bool:
+    with engine.connect() as conn:
+        return engine.dialect.has_schema(connection=conn, schema=schema_name)
+
+
+def create_database_schema(engine: Engine, schema_name: str) -> None:
+    if not database_has_schema(engine=engine, schema_name=schema_name):
+        with engine.connect() as conn:
+            conn.execute(CreateSchema(name=schema_name))
+            conn.commit()
+            print(f"Database schema '{schema_name}' successfully created.")
+    else:
+        print(f"Database schema '{schema_name}' already exists.")
+
+
+def get_data_db_schema_names(engine: Engine) -> List:
+    insp = inspect(engine)
+    return insp.get_schema_names()
