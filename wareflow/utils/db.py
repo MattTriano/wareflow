@@ -4,6 +4,8 @@ from urllib.parse import quote_plus
 import yaml
 
 from pymongo import MongoClient
+from pymongo.database import Database
+from pymongo.collection import Collection
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine.url import URL
 from sqlalchemy.engine.base import Engine
@@ -48,9 +50,19 @@ def get_metadata_db_connection_from_credential_file(
     return MongoClient(connection_str)
 
 
+def get_metadatabase(client: MongoClient, metadatabase_name: str = "mdwh") -> Database:
+    metadatabase = client[metadatabase_name]
+    return metadatabase
+
+
 def database_has_schema(engine: Engine, schema_name: str) -> bool:
     with engine.connect() as conn:
         return engine.dialect.has_schema(connection=conn, schema=schema_name)
+
+
+def get_supported_data_stage_names() -> List[str]:
+    supported_data_stage_names = ["data_raw", "data_clean", "analysis"]
+    return supported_data_stage_names
 
 
 def create_database_schema(engine: Engine, schema_name: str) -> None:
@@ -71,3 +83,15 @@ def get_data_schema_names(engine: Engine) -> List:
 def get_data_table_names_in_schema(engine: Engine, schema_name: str) -> List:
     insp = inspect(engine)
     return insp.get_table_names(schema=schema_name)
+
+
+def get_metadatabase_schema(
+    schema_base_name, metadatabase: Database, data_stage: str = "data_raw"
+) -> Collection:
+    """Technically this returns a metadatabase collection, but the package is being
+    built with the conceptual framework that postgres schemas should map to mongodb
+    collections."""
+    assert data_stage in get_supported_data_stage_names()
+    schema_name = f"{schema_base_name}_{data_stage}"
+    metadatabase_schema = metadatabase[schema_name]
+    return metadatabase_schema
