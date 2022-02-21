@@ -75,6 +75,41 @@ get_data_schema_names(engine)
  'topology']
 ```
 
+### To Collect Table Metadata
+
+```python
+from wareflow.metadata.collectors import SocrataTableMetadata
+
+schema_base_name="cook_county_il"
+table_name="cook_county_property_locations"
+table_id="c49d-89sn"
+
+property_locations_md = SocrataTableMetadata(
+    dwh_schema_base_name=schema_base_name,
+    dwh_table_name=table_name, 
+    table_id=table_id,
+    verbose=True
+)
+property_locations_table_metadata = property_locations_md.get_table_metadata()
+```
+
+### To Load Table Metadata into the metadata_db
+
+First, get a `client` connected to your MongoDB instance, then 
+
+```python
+from wareflow.utils.db import (get_metadatabase, get_metadatabase_schema)
+
+metadatabase = get_metadatabase(client=client)
+metadatabase_schema = get_metadatabase_schema(
+    schema_base_name=schema_base_name, 
+    metadatabase=metadatabase, 
+    data_stage="data_raw"
+)
+property_locations_md.load_table_metadata(metadatabase_schema=metadatabase_schema)
+```
+
+
 
 ## Design Notes
 
