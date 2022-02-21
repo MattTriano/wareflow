@@ -1,3 +1,5 @@
+from datetime import datetime
+from hashlib import sha256
 from typing import Dict, Optional
 
 import requests
@@ -15,9 +17,9 @@ class SocrataTableMetadata:
     def __repr__(self):
         repr_str = (
             f"SocrataTableMetadata(\n"
-            + f"    dwh_schema_base_name='{self.dwh_schema_base_name}',"
-            + f"    dwh_table_name='{self.dwh_table_name}',"
-            + f"    table_id='{self.table_id}'"
+            + f"    dwh_schema_base_name='{self.dwh_schema_base_name}',\n"
+            + f"    dwh_table_name='{self.dwh_table_name}',\n"
+            + f"    table_id='{self.table_id}'\n"
             + f")"
         )
         return repr_str
@@ -25,19 +27,42 @@ class SocrataTableMetadata:
     def __str__(self):
         repr_str = (
             f"SocrataTableMetadata(\n"
-            + f"    dwh_schema_base_name='{self.dwh_schema_base_name}',"
-            + f"    dwh_table_name='{self.dwh_table_name}',"
-            + f"    table_id='{self.table_id}'"
+            + f"    dwh_schema_base_name='{self.dwh_schema_base_name}',\n"
+            + f"    dwh_table_name='{self.dwh_table_name}',\n"
+            + f"    table_id='{self.table_id}'\n"
             + f")"
         )
         return repr_str
+
+    def set_hash_of_column_details(self) -> None:
+        source_domain = self.table_metadata["metadata"]["domain"]
+        table_details = self.table_metadata["resource"]
+        table_description = table_details["description"]
+        col_details = zip(
+            table_details["columns_name"],
+            table_details["columns_field_name"],
+            table_details["columns_datatype"],
+            table_details["columns_description"],
+        )
+        col_str = "".join(
+            [
+                name + field_name + datatype + descr
+                for name, field_name, datatype, descr in col_details
+            ]
+        )
+        prehash_str = self.table_id + source_domain + table_description + col_str
+        detail_hash_str = sha256(prehash_str.encode(encoding="utf-8")).hexdigest()
+        self.table_metadata["table_details_hash"] = detail_hash_str
 
     def set_table_metadata(self) -> None:
         api_call = f"http://api.us.socrata.com/api/catalog/v1?ids={self.table_id}"
         response = requests.get(api_call)
         if response.status_code == 200:
             response_json = response.json()
-            self.table_metadata = response_json["results"][0]
+            results = {"_id": self.table_id, "time_of_collection": datetime.utcnow()}
+            results.update(response_json["results"][0])
+            self.table_metadata = results
+            self.set_hash_of_column_details()
 
     def get_table_metadata(self) -> Optional[Dict]:
         if self.table_metadata is None:
