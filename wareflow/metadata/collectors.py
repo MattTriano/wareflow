@@ -2,17 +2,23 @@ from datetime import datetime
 from hashlib import sha256
 from typing import Dict, Optional
 
+from pymongo.collection import Collection
 import requests
 
 
 class SocrataTableMetadata:
     def __init__(
-        self, dwh_schema_base_name: str, dwh_table_name: str, table_id: str
+        self,
+        dwh_schema_base_name: str,
+        dwh_table_name: str,
+        table_id: str,
+        verbose: bool = False,
     ) -> None:
         self.dwh_schema_base_name = dwh_schema_base_name
         self.dwh_table_name = dwh_table_name
         self.table_id = table_id
         self.table_metadata = None
+        self.verbose = verbose
 
     def __repr__(self):
         repr_str = (
@@ -71,6 +77,43 @@ class SocrataTableMetadata:
             return self.table_metadata
         else:
             print("Couldn't retrieve table_metadata. Debug this issue.")
+
+    def load_table_metadata(self, metadatabase_schema: Collection) -> None:
+        cached_table_metadata = metadatabase_schema.find_one(
+            filter={"_id": self.table_id}
+        )
+        if cached_table_metadata is None:
+            metadatabase_schema.insert_one(self.table_metadata)
+            if self.verbose:
+                print(
+                    f"Metadata for {self.dwh_table_name} successfully loaded into metadata_db"
+                )
+        elif (
+            cached_table_metadata["table_details_hash"]
+            != self.table_metadata["table_details_hash"]
+        ):
+            table_metadata_cache_journal_id = self.table_metadata["_id"] + "_cache"
+            table_metadata_cache_journal = metadatabase_schema.find_one(
+                filter={"_id": table_metadata_cache_journal_id}
+            )
+            if table_metadata_cache_journal is None:
+                table_metadata_cache_journal = {
+                    "_id": table_metadata_cache_journal_id,
+                    "cached_table_metadata_versions": [cached_table_metadata],
+                }
+            else:
+                table_metadata_cache_journal["cached_table_metadata_versions"].extend(
+                    cached_table_metadata
+                )
+            metadatabase_schema.insert_one(table_metadata_cache_journal)
+            metadatabase_schema.replace_one(
+                filter={"_id": self.table_id}, replacement=self.table_metadata
+            )
+            if self.verbose:
+                print(
+                    f"Metadata for {self.dwh_table_name} successfully loaded into "
+                    + f"metadata_db and prior metadata versions were successfully cached"
+                )
 
     def get_socrata_to_sqlalchemy_naive_dtype_map(self) -> Dict:
         socrata_to_sqlalchemy_naive_dtype_map = {
