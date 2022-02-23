@@ -17,8 +17,9 @@ class SocrataTableMetadata:
         self.dwh_schema_base_name = dwh_schema_base_name
         self.dwh_table_name = dwh_table_name
         self.table_id = table_id
-        self.table_metadata = None
+        # self.table_metadata = None
         self.verbose = verbose
+        self.set_table_metadata()
 
     def __repr__(self):
         repr_str = (
