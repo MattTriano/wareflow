@@ -26,9 +26,9 @@ def get_data_db_connection_url_from_credential_file(credential_path: os.path) ->
     )
 
 
-def get_data_db_engine_from_credential_file(credential_path: os.path):
+def get_data_db_engine_from_credential_file(credential_path: os.path, future: bool = True) -> Engine:
     connection_url = get_data_db_connection_url_from_credential_file(credential_path)
-    return create_engine(connection_url, future=True)
+    return create_engine(connection_url, future=future)
 
 
 def get_metadata_db_connection_from_credential_file(

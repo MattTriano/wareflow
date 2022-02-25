@@ -60,6 +60,8 @@ class SocrataTableData:
         return self.metadata.table_metadata["metadata"]["domain"]
 
     def table_has_data_columns(self) -> bool:
+        """TODO: fix this. I think this is only checking the number of data columns 
+        *documented by the table owner*"""
         return len(self.metadata.table_metadata["resource"]["columns_name"]) != 0
 
     def table_has_geo_type_view(self) -> bool:
